@@ -21,19 +21,9 @@ function PasswordGate({ onUnlock }) {
     <div style={{ fontFamily: "'DM Mono', 'Courier New', monospace", background: "#0d0d0d", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Lead Tracker</div>
       <div style={{ fontSize: 11, color: "#555", letterSpacing: 3, textTransform: "uppercase", marginBottom: 32 }}>Enter password to continue</div>
-      <input
-        type="password"
-        placeholder="Password"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-        style={{ width: "100%", maxWidth: 280, background: "#111", border: `1px solid ${error ? "#ff5252" : "#1e1e1e"}`, borderRadius: 4, color: "#e0e0e0", padding: "10px 14px", fontSize: 14, fontFamily: "inherit", outline: "none", marginBottom: 12, boxSizing: "border-box", textAlign: "center" }}
-        autoFocus
-      />
+      <input type="password" placeholder="Password" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSubmit()} style={{ width: "100%", maxWidth: 280, background: "#111", border: `1px solid ${error ? "#ff5252" : "#1e1e1e"}`, borderRadius: 4, color: "#e0e0e0", padding: "10px 14px", fontSize: 14, fontFamily: "inherit", outline: "none", marginBottom: 12, boxSizing: "border-box", textAlign: "center" }} autoFocus />
       {error && <div style={{ fontSize: 11, color: "#ff5252", marginBottom: 12, letterSpacing: 1 }}>Incorrect password</div>}
-      <button onClick={handleSubmit} style={{ width: "100%", maxWidth: 280, background: "#fff", color: "#0d0d0d", border: "none", borderRadius: 4, padding: "10px 0", fontSize: 12, fontFamily: "inherit", fontWeight: 700, letterSpacing: 1, cursor: "pointer" }}>
-        ENTER
-      </button>
+      <button onClick={handleSubmit} style={{ width: "100%", maxWidth: 280, background: "#fff", color: "#0d0d0d", border: "none", borderRadius: 4, padding: "10px 0", fontSize: 12, fontFamily: "inherit", fontWeight: 700, letterSpacing: 1, cursor: "pointer" }}>ENTER</button>
     </div>
   );
 }
@@ -52,12 +42,7 @@ const METHODS = [
 ];
 
 const blankForm = {
-  business: "",
-  contact: "",
-  method: "call",
-  status: "no_answer",
-  follow_up_date: "",
-  notes: "",
+  business: "", contact: "", method: "call", status: "no_answer", follow_up_date: "", notes: "",
 };
 
 function getStatusMeta(val) {
@@ -73,14 +58,13 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
 
-  if (!authed) return <PasswordGate onUnlock={() => setAuthed(true)} />;
-
-  useEffect(() => { fetchLeads(); }, []);
+  useEffect(() => {
+    if (authed) fetchLeads();
+  }, [authed]);
 
   async function fetchLeads() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("leads").select("*").order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("leads").select("*").order("created_at", { ascending: false });
     if (!error) setLeads(data || []);
     setLoading(false);
   }
@@ -108,8 +92,7 @@ export default function App() {
   }
 
   function handleEdit(lead) {
-    setForm({ business: lead.business, contact: lead.contact || "", method: lead.method,
-      status: lead.status, follow_up_date: lead.follow_up_date || "", notes: lead.notes || "" });
+    setForm({ business: lead.business, contact: lead.contact || "", method: lead.method, status: lead.status, follow_up_date: lead.follow_up_date || "", notes: lead.notes || "" });
     setEditId(lead.id);
     setView("log");
     window.scrollTo(0, 0);
@@ -117,23 +100,21 @@ export default function App() {
 
   function cancelEdit() { setEditId(null); setForm(blankForm); }
 
+  if (!authed) return <PasswordGate onUnlock={() => setAuthed(true)} />;
+
   const today = new Date().toDateString();
   const todayLeads = leads.filter((l) => new Date(l.created_at).toDateString() === today);
   const counts = STATUSES.reduce((acc, s) => { acc[s.value] = todayLeads.filter((l) => l.status === s.value).length; return acc; }, {});
   const totalToday = todayLeads.length;
 
   const inputStyle = {
-    width: "100%", background: "#0d0d0d", border: "1px solid #1e1e1e",
-    borderRadius: 4, color: "#e0e0e0", padding: "9px 12px", fontSize: 13,
-    fontFamily: "inherit", marginBottom: 10, boxSizing: "border-box", outline: "none",
+    width: "100%", background: "#0d0d0d", border: "1px solid #1e1e1e", borderRadius: 4, color: "#e0e0e0", padding: "9px 12px", fontSize: 13, fontFamily: "inherit", marginBottom: 10, boxSizing: "border-box", outline: "none",
   };
 
   return (
     <div style={{ fontFamily: "'DM Mono', 'Courier New', monospace", background: "#0d0d0d", minHeight: "100vh", color: "#e0e0e0", padding: "0 0 80px" }}>
       <div style={{ padding: "24px 20px 16px", borderBottom: "1px solid #1e1e1e", position: "sticky", top: 0, background: "#0d0d0d", zIndex: 10 }}>
-        <div style={{ fontSize: 11, color: "#555", letterSpacing: 3, textTransform: "uppercase", marginBottom: 4 }}>
-          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
-        </div>
+        <div style={{ fontSize: 11, color: "#555", letterSpacing: 3, textTransform: "uppercase", marginBottom: 4 }}>{new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}</div>
         <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: "#fff" }}>Lead Tracker</div>
         <div style={{ display: "flex", gap: 4, marginTop: 16 }}>
           {["log", "report"].map((v) => (
@@ -165,7 +146,6 @@ export default function App() {
               {editId && <button onClick={cancelEdit} style={{ background: "transparent", color: "#555", border: "1px solid #2a2a2a", borderRadius: 4, padding: "10px 16px", fontSize: 12, fontFamily: "inherit", cursor: "pointer" }}>CANCEL</button>}
             </div>
           </div>
-
           <div style={{ fontSize: 10, color: "#555", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Today — {totalToday} logged</div>
           {loading && <div style={{ color: "#333", fontSize: 13 }}>Loading...</div>}
           {!loading && todayLeads.length === 0 && <div style={{ color: "#333", fontSize: 13, padding: "20px 0" }}>No entries yet today.</div>}
@@ -245,9 +225,5 @@ function statCard() {
 }
 
 function smallBtnStyle(color) {
-  return {
-    background: "transparent", border: `1px solid ${color}40`, color,
-    borderRadius: 3, padding: "3px 10px", fontSize: 10,
-    fontFamily: "inherit", cursor: "pointer", letterSpacing: 1,
-  };
+  return { background: "transparent", border: `1px solid ${color}40`, color, borderRadius: 3, padding: "3px 10px", fontSize: 10, fontFamily: "inherit", cursor: "pointer", letterSpacing: 1 };
 }
