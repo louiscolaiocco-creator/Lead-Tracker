@@ -1,6 +1,43 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./supabaseClient";
 
+const PASSWORD = "StayCurious";
+
+function PasswordGate({ onUnlock }) {
+  const [input, setInput] = useState("");
+  const [error, setError] = useState(false);
+
+  function handleSubmit() {
+    if (input === PASSWORD) {
+      sessionStorage.setItem("lt_auth", "1");
+      onUnlock();
+    } else {
+      setError(true);
+      setTimeout(() => setError(false), 1500);
+    }
+  }
+
+  return (
+    <div style={{ fontFamily: "'DM Mono', 'Courier New', monospace", background: "#0d0d0d", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Lead Tracker</div>
+      <div style={{ fontSize: 11, color: "#555", letterSpacing: 3, textTransform: "uppercase", marginBottom: 32 }}>Enter password to continue</div>
+      <input
+        type="password"
+        placeholder="Password"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+        style={{ width: "100%", maxWidth: 280, background: "#111", border: `1px solid ${error ? "#ff5252" : "#1e1e1e"}`, borderRadius: 4, color: "#e0e0e0", padding: "10px 14px", fontSize: 14, fontFamily: "inherit", outline: "none", marginBottom: 12, boxSizing: "border-box", textAlign: "center" }}
+        autoFocus
+      />
+      {error && <div style={{ fontSize: 11, color: "#ff5252", marginBottom: 12, letterSpacing: 1 }}>Incorrect password</div>}
+      <button onClick={handleSubmit} style={{ width: "100%", maxWidth: 280, background: "#fff", color: "#0d0d0d", border: "none", borderRadius: 4, padding: "10px 0", fontSize: 12, fontFamily: "inherit", fontWeight: 700, letterSpacing: 1, cursor: "pointer" }}>
+        ENTER
+      </button>
+    </div>
+  );
+}
+
 const STATUSES = [
   { value: "booked", label: "Booked", color: "#00e676", bg: "#00e67615" },
   { value: "callback", label: "Call Back", color: "#ffab40", bg: "#ffab4015" },
@@ -28,12 +65,15 @@ function getStatusMeta(val) {
 }
 
 export default function App() {
+  const [authed, setAuthed] = useState(!!sessionStorage.getItem("lt_auth"));
   const [leads, setLeads] = useState([]);
   const [form, setForm] = useState(blankForm);
   const [view, setView] = useState("log");
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
+
+  if (!authed) return <PasswordGate onUnlock={() => setAuthed(true)} />;
 
   useEffect(() => { fetchLeads(); }, []);
 
@@ -198,4 +238,16 @@ export default function App() {
       )}
     </div>
   );
+}
+
+function statCard() {
+  return { background: "#111", border: "1px solid #1e1e1e", borderRadius: 6, padding: "14px" };
+}
+
+function smallBtnStyle(color) {
+  return {
+    background: "transparent", border: `1px solid ${color}40`, color,
+    borderRadius: 3, padding: "3px 10px", fontSize: 10,
+    fontFamily: "inherit", cursor: "pointer", letterSpacing: 1,
+  };
 }
